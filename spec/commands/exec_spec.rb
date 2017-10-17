@@ -538,6 +538,12 @@ RSpec.describe "bundle exec" do
       end
     end
 
+    context "the executable exits by signal" do
+      let(:executable) { super() << "\nraise SignalException, 'SIGTERM'\n" }
+      let(:exit_code) { 128 + 15 }
+      it_behaves_like "it runs"
+    end
+
     context "the executable is empty", :bundler => "< 2" do
       let(:executable) { "" }
 
