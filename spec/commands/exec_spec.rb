@@ -538,9 +538,23 @@ RSpec.describe "bundle exec" do
       end
     end
 
-    context "the executable exits by signal" do
-      let(:executable) { super() << "\nraise SignalException, 'SIGTERM'\n" }
-      let(:exit_code) { 128 + 15 }
+    context "the executable exits by SignalException" do
+      let(:executable) do
+        ex = super()
+        ex << "\n"
+        if LessThanProc.with(RUBY_VERSION).call( "1.9" )
+          # Ruby < 1.9 needs a flush for a exit by signal, later
+          # rubies do not
+          ex << "STDOUT.flush\n"
+        end
+        ex << "raise SignalException, 'SIGTERM'\n"
+        ex
+      end
+      let(:exit_code) do
+        # signal mask 128 + plus signal 15 -> TERM
+        # this is specified by C99
+        128 + 15
+      end
       it_behaves_like "it runs"
     end
 
